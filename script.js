@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateProgress();
             questionStartTime = Date.now();
         } else {
-            updateHighProgress();
+            updateHighScore();
             showResults();
         }
     }
@@ -94,7 +94,94 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function selectAnswer(selectedButton, correctAnswer, answers) {
-        // TODO: complete
+        const timeTaken = (Date.now() - questionStartTime) / 1000;
+        scoreForThisQuestion = Math.max(baseScorePerQuestion - Math.floor(timeTaken) * penaltyPerSecond, 0);
+
+        disableButtons();
+        let correctButton;
+        answers.forEach(answer => {
+            if (decodeHTML(answer) === decodeHTML(correctAnswer)) {
+                correctButton = [...answerContainer.childNodes].find(button => button.innerHTML === decodeHTML(correctAnswer))
+            }
+        });
+
+        if (decodeHTML(selectedButton.innerHTML)=== decodeHTML(correctAnswer)) {
+            score += scoreForThisQuestion;
+            selectedButton.classList.add('correct');
+            resultContainer.innerText = `Correct! +${scoreForThisQuestion} Points`;
+        } else {
+            selectedButton.classList.add('incorrect');
+            correctButton.classList.add('correct');
+            resultContainer.innerText = `Wrong! The correct answer was: ${decodeHTML(correctAnswer)}`
+        }
+
+        updateCurrentScore();
+        setTimeout(() => {
+            questionIndex++;
+            displayQuestion();
+            resultContainer.innerText = '';
+        }, 3000);
     }
+
+    function updateCurrentScore() {
+        currentScoreDisplay.innerText = `Current Score: ${score}`;
+    }
+
+    function disableButtons() {
+        const buttons = answerContainer.getElementsByClassName('answer-btn');
+        for (const button of buttons) {
+            button.disabled = true;
+        }
+    }
+
+    function showResults() {
+        questionContainer.innerText = 'Quiz Finished!';
+        answerContainer.innerHTML = '';
+        resultContainer.innerText = `Your final score is ${score}`;
+        updateHighScoreDisplay();
+        progressContainer.innerText = '';
+
+        const restartButton = document.createElement('button');
+        restartButton.textContent = 'Restart Quiz';
+        restartButton.addEventListener('click', () => {
+            quizDiv.style.display = 'none';
+            gameSetupDiv.style.display = 'block';
+            fetchCategories();
+        })
+        answerContainer.appendChild(restartButton)
+    }
+
+    function updateHighScore() {
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('HighScoreTrivia', highScore.toString());
+            updateHighScoreDisplay();
+        }
+    }
+    
+    function updateHighScoreDisplay() {
+        highScoreDisplay.innerText = `High Score: ${highScore}`;
+    }
+
+    function updateProgress() {
+        progressContainer.innerText = `Question ${questionIndex + 1} / ${currentQuestions.length}`
+    };
+
+    function shuffleArray(array) {
+        for (let i = array.length -1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function decodeHTML(html) {
+        var txt = document.createElement('textarea');
+        txt.innerHTML = html;
+        return txt.value;
+    }
+
+    startButton.addEventListener('click', startGame);
+
+    fetchCategories();
 })
 
