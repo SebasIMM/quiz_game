@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const questionContainer = document.getElementById('question');
-    const answerContainer = document.getElementById('answer');
+    const answersContainer = document.getElementById('answers');
     const resultContainer = document.getElementById('result');
     const progressContainer = document.getElementById('progress');
     const currentScoreDisplay = document.getElementById('currentScore');
@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     option.value = category.id;
                     option.textContent = category.name;
                     categorySelect.appendChild(option)
-                    
                 });
             })
     };
@@ -43,15 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetchQuestions(amount, category, difficulty);
         
-        gameSetupDiv.style.display = 'noen';
+        gameSetupDiv.style.display = 'none';
         quizDiv.style.display = 'block';
     }
 
     function fetchQuestions(amount, category, difficulty) {
         let url = `https://opentdb.com/api.php?amount=${amount}`;
 
-        if (category !== "all") url += `&category=${category}`;
-        if (difficulty !== "any") url += `&difficulty=${difficulty}`;
+        if (category) url += `&category=${category}`;
+        if (difficulty) url += `&difficulty=${difficulty}`;
         url += `&type=multiple`;
 
         fetch(url)
@@ -80,32 +79,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayAnswers(question) {
-        answerContainer.innerHTML = '';
+        answersContainer.innerHTML = '';
         const answers = [...question.incorrect_answers, question.correct_answer];
         shuffleArray(answers);
 
-        answers.forEach(answers => {
-            const button = document.createElement('button')
+        answers.forEach(answer => {
+            const button = document.createElement('button');
             button.innerHTML = decodeHTML(answer);
             button.className = 'answer-btn';
             button.addEventListener('click', () => selectAnswer(button, question.correct_answer, answers));
-            answerContainer.appendChild(button);
+            answersContainer.appendChild(button);
         })
     }
 
     function selectAnswer(selectedButton, correctAnswer, answers) {
         const timeTaken = (Date.now() - questionStartTime) / 1000;
-        scoreForThisQuestion = Math.max(baseScorePerQuestion - Math.floor(timeTaken) * penaltyPerSecond, 0);
+        let scoreForThisQuestion = Math.max(baseScorePerQuestion - Math.floor(timeTaken) * penaltyPerSecond, 0);
 
         disableButtons();
         let correctButton;
         answers.forEach(answer => {
             if (decodeHTML(answer) === decodeHTML(correctAnswer)) {
-                correctButton = [...answerContainer.childNodes].find(button => button.innerHTML === decodeHTML(correctAnswer))
+                correctButton = [...answersContainer.childNodes].find(button => button.innerHTML === decodeHTML(correctAnswer))
             }
         });
 
-        if (decodeHTML(selectedButton.innerHTML)=== decodeHTML(correctAnswer)) {
+        if (decodeHTML(selectedButton.innerHTML) === decodeHTML(correctAnswer)) {
             score += scoreForThisQuestion;
             selectedButton.classList.add('correct');
             resultContainer.innerText = `Correct! +${scoreForThisQuestion} Points`;
@@ -128,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function disableButtons() {
-        const buttons = answerContainer.getElementsByClassName('answer-btn');
+        const buttons = answersContainer.getElementsByClassName('answer-btn');
         for (const button of buttons) {
             button.disabled = true;
         }
@@ -136,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showResults() {
         questionContainer.innerText = 'Quiz Finished!';
-        answerContainer.innerHTML = '';
+        answersContainer.innerHTML = '';
         resultContainer.innerText = `Your final score is ${score}`;
         updateHighScoreDisplay();
         progressContainer.innerText = '';
@@ -148,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gameSetupDiv.style.display = 'block';
             fetchCategories();
         })
-        answerContainer.appendChild(restartButton)
+        answersContainer.appendChild(restartButton)
     }
 
     function updateHighScore() {
@@ -168,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function shuffleArray(array) {
-        for (let i = array.length -1; i > 0; i--) {
+        for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
         }
